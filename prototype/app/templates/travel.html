@@ -1,8 +1,120 @@
 {% extends "base.html" %}
 
+{% block css %}
+<link rel = "stylesheet" href = "{{ url_for('static', filename = 'css/travel.css') }}">
+{% endblock%}
+
 {% block main %}
 <h1 class="page-header">HACKATHON - OMNI-Dev - Travel</h1>
 {% include 'flash_messages.html' %}
 
 <p class="lead">Prototype of our application</p>
+<div id = "map"></div>
+
+
 {% endblock %}
+
+{% block js%}
+<script>
+    function initMap(){
+        var options = {
+            zoom:13,
+            center:{lat:18.0120,lng:-76.7987}
+        }
+
+        // new map
+
+        var map = new google.maps.Map(document.getElementById('map'),options);
+        
+        
+        // listen for clicks on map
+        google.maps.event.addListener(map,'click',
+        function(event){
+            // add marker
+            addMarker({coords:event.latLng});
+
+        });
+        //*/
+        /*
+        // add marker
+        var marker = new google.maps.Marker({
+            position:{lat:18.0120,lng:-76.7987},
+            map:map,
+            icon: //img url
+        });
+
+        // content on marker
+        var infoWindow = new google.maps.InfoWindow({
+            content: '<h3> HWT Bus Center </h3>'
+        });
+
+        // event listener for content
+
+        marker.addListener('click', function(){
+            infoWindow.open(map,marker);
+        });
+
+        */
+
+         
+
+        /*
+        addMarker({coords:{lat:18.0120,lng:-76.7987},content:"'<h3> HWT Bus Center </h3>'"});
+
+        addMarker({coords:{lat:18.003226513663353,lng:-76.78834332273956},content:"'<h3> The Jamaica Pegasus Hotel </h3>'"});
+        */
+
+        // Arrays for markers
+        var markers = [
+        {coords:{lat:18.0120,lng:-76.7987},content:"'<h3> HWT Bus Center </h3>'"},
+        {coords:{lat:18.003226513663353,lng:-76.78834332273956},content:"'<h3> The Jamaica Pegasus Hotel </h3>'"}
+         ]
+
+        // Loop through marker
+
+        for(var i = 0; i < markers.length; i ++){
+            addMarker(markers[i]);
+
+        }; 
+
+
+       // Add Marker Function 
+       function addMarker(params){
+        var marker = new google.maps.Marker({
+            position:params.coords,
+            map:map
+        });
+
+        if(params.content){
+            // content on marker
+            var infoWindow = new google.maps.InfoWindow({
+                content: params.content
+            });
+
+            // event listener for content
+
+            marker.addListener('click', function(){
+                infoWindow.open(map,marker);
+            });
+
+        }
+
+
+
+
+       }
+    }
+
+
+</script>
+<!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+<script
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsU1flb8aRtQ5GHugB5iH_A-ggXVR_EwA&callback=initMap&libraries=&v=weekly"
+async
+></script>
+{%endblock%}
+
+
+
+
+<!-- google api key: AIzaSyAsU1flb8aRtQ5GHugB5iH_A-ggXVR_EwA-->
