@@ -17,6 +17,13 @@
     <button type = "submit" class = "btn btn-primary btn-block">GO!</button>
 </form>
 <br>
+
+<div id="floating-panel">
+    <button id="toggle-heatmap">Toggle Heatmap</button>
+    <button id="change-gradient">Change gradient</button>
+    <button id="change-radius">Change radius</button>
+    <button id="change-opacity">Change opacity</button>
+  </div>
 <div id = "map"></div>
 
 
@@ -35,19 +42,229 @@
 
 {% block js%}
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+
 <script>
     hasCurrentLocation =false;
+
+
+    //--------------------------
+
+    /*
+    Clarendon	3	2,766	 17.9740511469171, -77.24065972421266
+    Hanover	9	1,449	 18.447174113961864, -78.19043529291106
+    KSA	29	14,230	    18.025038015642526, -76.81534872052288
+    Manchester	8	3,099	 18.02843661395421, -77.48012054234242
+    Portland	0	1,601	 18.168517262979638, -76.42669802096158
+    St. Ann	33	3,499	 18.401767485728907, -77.12305683664522
+    St. Catherine	19	10,090	 18.014841821597926, -77.04587443223198
+    St. Elizabeth	13	2,145	 18.05902106161988, -77.69813710690453
+    St. James	5	4,990	 18.51695730357636, -77.82894268755622
+    St. Mary	4	1,679	 18.369015762723855, -76.86116095552806
+    St. Thomas	4	2,002	 17.88859182042442, -76.42669802005133
+    Trelawny	1	1,730	 18.501789462295957, -77.659393058496
+    Westmoreland	16	2,406 18.286261544393938, -78.17763909449143
+
+    {location: new google.maps.LatLng(18.447174113961864, -78.19043529291106), weight: 1449},
+        {location: new google.maps.LatLng(18.025038015642526, -76.81534872052288), weight: 14230},
+        {location: new google.maps.LatLng(18.02843661395421, -77.48012054234242), weight: 3099},
+        {location: new google.maps.LatLng(18.168517262979638, -76.42669802096158), weight: 1601},
+        {location: new google.maps.LatLng(18.401767485728907, -77.12305683664522), weight: 3499},
+        {location: new google.maps.LatLng(18.014841821597926, -77.04587443223198), weight: 10090},
+        {location: new google.maps.LatLng(18.05902106161988, -77.69813710690453), weight: 2145},
+        {location: new google.maps.LatLng(18.51695730357636, -77.82894268755622), weight: 4990},
+        {location: new google.maps.LatLng(18.369015762723855, -76.86116095552806), weight: 1679},
+        {location: new google.maps.LatLng(17.88859182042442, -76.42669802005133), weight: 2002},
+        {location: new google.maps.LatLng(18.501789462295957, -77.659393058496), weight: 1730},
+        {location: new google.maps.LatLng(18.286261544393938, -78.17763909449143), weight: 2406}
+    */
+
+    
+
+
+
+    //----------------------------
+
+    // locations for events/resturants
+    /*
+    Look out lat:18.05687874758899, lng:-76.84239186170669
+    Loose Cannon Tours  lat:17.94570888348273, lng:-76.8377622162021
+
+    Downtown Temple Lane Art Walk lat:17.97412251577837, lng:-76.79553351767093
+    Nature Rock aka Pum Pum Rock lat:18.086268477590423, lng:-76.99395068445898
+    Cascade Falls lat:18.10312521889119, lng:-76.7181109754681
+    Sunken Pirate City lat:17.94292460710195, lng:-76.84570755271582
+    Cane River Waterfalls lat:17.97226778459995, lng:-76.6936287754681
+    Marine Blu Excursions LTD lat:17.94463805594434, lng:-76.84256953895436
+    Nanook lat:18.02484135923469, lng:-76.79888862519296
+    Tapioca Village by the River lat:18.215346099051256, lng:-76.81382630721124
+    Cane River Falls lat:17.95218350567941, lng:-76.66852362996354
+    DaCosta Farm and Attraction lat: 17.95704291929325, lng:-76.9675493162021
+    Music Museum lat:17.9725063429163, lng:-76.79031239944581
+    Blue Mountain Bicycle Tours Starting Point lat:18.093882521478047, lng:-76.69977516348145
+
+    Emancipation Park lat:18.00371757675558, lng:-76.79007589825494
+
+    */
+
+
+    const clustlocations = [
+        { lat:18.05687874758899, lng:-76.84239186170669},
+        { lat:17.94570888348273, lng:-76.8377622162021 },
+        { lat:17.97412251577837, lng:-76.79553351767093 },
+        { lat:18.086268477590423, lng:-76.99395068445898 },
+        { lat:18.10312521889119, lng:-76.7181109754681 },
+        { lat:17.94292460710195, lng:-76.84570755271582 },
+        { lat:17.97226778459995, lng:-76.6936287754681},
+        { lat:17.94463805594434, lng:-76.84256953895436 },
+        { lat:18.02484135923469, lng:-76.79888862519296 },
+        { lat:18.215346099051256, lng:-76.81382630721124 },
+        { lat:17.95218350567941, lng:-76.66852362996354},
+        { lat: 17.95704291929325, lng:-76.9675493162021 },
+        { lat:17.9725063429163, lng:-76.79031239944581},
+        { lat:18.093882521478047, lng:-76.69977516348145 },
+        { lat:18.00371757675558, lng:-76.79007589825494 }
+        ];
+
+
+   
+
+
+
     function initMap(){
+        var sanFrancisco = new google.maps.LatLng(37.774546, -122.433523);
+        var Jamaica = new google.maps.LatLng(18.1096, -77.2975);
         var options = {
-            zoom:13,
-            center:{lat:18.0120,lng:-76.7987}
+            zoom:3,
+            center:  Jamaica//{ lat: -28.024, lng: 140.887 }//{lat:18.0120,lng:-76.7987}
         }
+
+        
 
         // new map
 
         var map = new google.maps.Map(document.getElementById('map'),options);
+
+        // ---------- CLUSTER MARKERS -----------
         
+        // Create an array of alphabetical characters used to label the markers.
+        const labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        const clustmarkers = clustlocations.map((location, i) => {
+            // return new google.maps.Marker({
+            // position: location,
+            // label: labels[i % labels.length],
+            // });
+
+            cmarker = new google.maps.Marker({
+            position: location,
+            label: labels[i % labels.length],
+            map:map
+            });
+
+
+            // content on marker
+            var infoWindow = new google.maps.InfoWindow({
+                    content: "<h4Emancipation Park</h4>"
+                });
+
+                // event listener for content
+
+                cmarker.addListener('mouseover', function(){
+                    infoWindow.open(map,cmarker);
+                });
+            return cmarker
+        });
+
+        console.log(clustmarkers);
+        // Add a marker clusterer to manage the markers.
+        new MarkerClusterer(map, clustmarkers, {
+            imagePath:
+            "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+        });
+
+
+        // ----------- CLUSTER MARKERS END -----------
+
+
+        //-------------- HEAT MAP ---------------
+         // C-19 CASES AND LOCATION
+        /* Data points defined as a mixture of WeightedLocation and LatLng objects */
+        var heatMapData = [
+        {location: new google.maps.LatLng(17.9740511469171, -77.24065972421266), weight: 2766},
+        {location: new google.maps.LatLng(18.447174113961864, -78.19043529291106), weight: 1449},
+        {location: new google.maps.LatLng(18.025038015642526, -76.81534872052288), weight: 14230},
+        {location: new google.maps.LatLng(18.02843661395421, -77.48012054234242), weight: 3099},
+        {location: new google.maps.LatLng(18.168517262979638, -76.42669802096158), weight: 1601},
+        {location: new google.maps.LatLng(18.401767485728907, -77.12305683664522), weight: 3499},
+        {location: new google.maps.LatLng(18.014841821597926, -77.04587443223198), weight: 10090},
+        {location: new google.maps.LatLng(18.05902106161988, -77.69813710690453), weight: 2145},
+        {location: new google.maps.LatLng(18.51695730357636, -77.82894268755622), weight: 4990},
+        {location: new google.maps.LatLng(18.369015762723855, -76.86116095552806), weight: 1679},
+        {location: new google.maps.LatLng(17.88859182042442, -76.42669802005133), weight: 2002},
+        {location: new google.maps.LatLng(18.501789462295957, -77.659393058496), weight: 1730},
+        {location: new google.maps.LatLng(18.286261544393938, -78.17763909449143), weight: 2406}
         
+        ];
+
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatMapData
+        });
+        heatmap.setMap(map);
+
+        document
+            .getElementById("toggle-heatmap")
+            .addEventListener("click", toggleHeatmap);
+        document
+            .getElementById("change-gradient")
+            .addEventListener("click", changeGradient);
+        document
+            .getElementById("change-opacity")
+            .addEventListener("click", changeOpacity);
+        document
+            .getElementById("change-radius")
+            .addEventListener("click", changeRadius);
+
+
+            function toggleHeatmap() {
+            heatmap.setMap(heatmap.getMap() ? null : map);
+            }
+
+            function changeGradient() {
+            const gradient = [
+                "rgba(0, 255, 255, 0)",
+                "rgba(0, 255, 255, 1)",
+                "rgba(0, 191, 255, 1)",
+                "rgba(0, 127, 255, 1)",
+                "rgba(0, 63, 255, 1)",
+                "rgba(0, 0, 255, 1)",
+                "rgba(0, 0, 223, 1)",
+                "rgba(0, 0, 191, 1)",
+                "rgba(0, 0, 159, 1)",
+                "rgba(0, 0, 127, 1)",
+                "rgba(63, 0, 91, 1)",
+                "rgba(127, 0, 63, 1)",
+                "rgba(191, 0, 31, 1)",
+                "rgba(255, 0, 0, 1)",
+            ];
+            heatmap.set("gradient", heatmap.get("gradient") ? null : gradient);
+            }
+
+            function changeRadius() {
+            heatmap.set("radius", heatmap.get("radius") ? null : 20);
+            }
+
+            function changeOpacity() {
+            heatmap.set("opacity", heatmap.get("opacity") ? null : 0.2);
+            }
+
+        //--------------------------------------
+
+        
+
+
+
+        /*
         // listen for clicks on map
         google.maps.event.addListener(map,'click',
         function(event){
@@ -55,7 +272,7 @@
             addMarker({coords:event.latLng});
 
         });
-        //*/
+        */
         /*
         // add marker
         var marker = new google.maps.Marker({
@@ -86,8 +303,23 @@
         */
 
         // Arrays for markers
+        // {coords:{ lat:18.05687874758899, lng:-76.84239186170669},content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.94570888348273, lng:-76.8377622162021 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.97412251577837, lng:-76.79553351767093 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:18.086268477590423, lng:-76.99395068445898 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:18.10312521889119, lng:-76.7181109754681 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.94292460710195, lng:-76.84570755271582 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.97226778459995, lng:-76.6936287754681},content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.94463805594434, lng:-76.84256953895436 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:18.02484135923469, lng:-76.79888862519296 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:18.215346099051256, lng:-76.81382630721124 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.95218350567941, lng:-76.66852362996354},content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat: 17.95704291929325, lng:-76.9675493162021 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:17.9725063429163, lng:-76.79031239944581},content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:18.093882521478047, lng:-76.69977516348145 },content:"'<h3> HWT Bus Center </h3>'"},
+        // {coords:{ lat:18.00371757675558, lng:-76.79007589825494 },content:"'<h3> HWT Bus Center </h3>'"}
         var markers = [
-        {coords:{lat:18.0120,lng:-76.7987},content:"'<h3> HWT Bus Center </h3>'"},
+        {coords:{lat:18.0120,lng:-76.7987},content:"'<h3> HWT Bus Center </h3>'"}
         //{coords:{lat:18.003226513663353,lng:-76.78834332273956},content:"'<h3> The Jamaica Pegasus Hotel </h3>'"}
          ]
 
@@ -114,7 +346,7 @@
 
                 // event listener for content
 
-                marker.addListener('click', function(){
+                marker.addListener('mouseover', function(){
                     infoWindow.open(map,marker);
                 });
 
@@ -259,7 +491,7 @@
 
 <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
 <script
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsU1flb8aRtQ5GHugB5iH_A-ggXVR_EwA&callback=initMap&libraries=&v=weekly"
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsU1flb8aRtQ5GHugB5iH_A-ggXVR_EwA&callback=initMap&libraries=visualization&v=weekly"
 async
 ></script>
 
